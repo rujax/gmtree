@@ -39,3 +39,11 @@ $ go mod graph | gmtree > treeview_file_path
 Mac
 
 ![example_mac.png](example_mac.png)
+
+Windows
+
+![example_windows.png](example_windows.png)
+
+Linux
+
+![example_linux.png](example_linux.png)
