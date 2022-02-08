@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"runtime"
 	"strings"
 	"time"
 
@@ -22,9 +21,6 @@ const (
 
 	// Basic Latin
 	space = "\u0020"
-
-	// CJK Symbols and Punctuation
-	ideographicSpace = "\u3000"
 )
 
 type Node struct {
@@ -156,12 +152,12 @@ func getPrefix(node *Node) string {
 		return ""
 	}
 
-	prefix := strings.Repeat(spaceByOS, indent)
+	prefix := strings.Repeat(space, indent)
 
 	if node.Parent.Next != nil {
 		prefix = lightVertical + prefix
 	} else {
-		prefix = spaceByOS + prefix
+		prefix = space + prefix
 	}
 
 	prefix = getPrefix(node.Parent) + prefix
@@ -205,10 +201,9 @@ func showHelp(c *cli.Context) {
 }
 
 var (
-	indent    int
-	input     []string
-	nodeMap   map[string]*Node
-	spaceByOS string
+	indent  int
+	input   []string
+	nodeMap map[string]*Node
 
 	buildTime string
 	goVersion string
@@ -268,12 +263,6 @@ func main() {
 
 			if err := checkRequirements(requirements); err != nil {
 				return err
-			}
-
-			if runtime.GOOS == "linux" {
-				spaceByOS = ideographicSpace
-			} else {
-				spaceByOS = space
 			}
 
 			nodeMap = make(map[string]*Node)
