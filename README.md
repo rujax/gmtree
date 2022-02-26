@@ -25,6 +25,22 @@ Print treeview on Stdout
 
 ```bash
 $ go mod graph | gmtree # Indent: 2
+ github.com/rujax/gmtree
+├── github.com/cpuguy83/go-md2man/v2@v2.0.0-20190314233015-f79a8a8ca69d
+│  ├── github.com/pmezard/go-difflib@v1.0.0
+│  ├── github.com/russross/blackfriday/v2@v2.0.1
+│  └── github.com/shurcooL/sanitized_anchor_name@v1.0.0
+├── github.com/russross/blackfriday/v2@v2.0.1
+├── github.com/shurcooL/sanitized_anchor_name@v1.0.0
+└── github.com/urfave/cli/v2@v2.3.0
+   ├── github.com/BurntSushi/toml@v0.3.1
+   ├── github.com/cpuguy83/go-md2man/v2@v2.0.0-20190314233015-f79a8a8ca69d
+   └── gopkg.in/yaml.v2@v2.2.3
+      └── gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405
+```
+
+Print treeview with custom indent
+```bash
 $ go mod graph | gmtree -i n # Indent: n
 ```
 
