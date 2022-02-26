@@ -23,11 +23,20 @@ const (
 	space = "\u0020"
 )
 
+var DEBUG = true
+
 type Node struct {
 	Name     string
 	Parent   *Node
 	Next     *Node
 	Children []*Node
+	Keep     bool
+}
+
+func debug(formatString string, args ...interface{}) {
+	if DEBUG {
+		fmt.Printf(formatString+"\n", args...)
+	}
 }
 
 func checkStdin() error {
@@ -147,6 +156,82 @@ func parseRequirements(requirements []string) *Node {
 	return tree
 }
 
+func pruneTree(root *Node, targets map[string]bool) {
+	keepTraversal(root, targets)
+	if !root.Keep {
+		panic(errors.New("No nodes matched criteria"))
+	}
+
+	removeNoHitNodes(root)
+}
+
+func keepTraversal(node *Node, targets map[string]bool) {
+	debug("traversing %s", node.Name)
+	if _, ok := targets[node.Name]; ok {
+		debug("FOUND %s", node.Name)
+		keepSelfAndAncestors(node)
+	} else {
+		for _, child := range node.Children {
+			keepTraversal(child, targets)
+		}
+	}
+}
+
+func keepSelfAndAncestors(self *Node) {
+	if self == nil || self.Keep {
+		// at the root or have already marked all nodes above to keep
+		return
+	}
+
+	self.Keep = true
+	debug("keeping %s", self.Name)
+	keepSelfAndAncestors(self.Parent)
+}
+
+func removeNoHitNodes(node *Node) {
+	toDetach := make([]*Node, 0, len(node.Children))
+	toKeepTraversing := make([]*Node, 0, len(node.Children))
+
+	for _, child := range node.Children {
+		if child.Keep {
+			toKeepTraversing = append(toKeepTraversing, child)
+		} else {
+			toDetach = append(toDetach, child)
+		}
+	}
+
+	for _, child := range toDetach {
+		detachNode(child)
+	}
+	for _, child := range toKeepTraversing {
+		removeNoHitNodes(child)
+	}
+}
+
+func detachNode(node *Node) {
+	debug("detaching %s", node.Name)
+	parent := node.Parent
+	siblingsAndSelf := node.Parent.Children
+	var i int
+	var sibling *Node
+	for i, sibling = range siblingsAndSelf {
+		if sibling == node {
+			break
+		}
+	}
+
+	if sibling != node {
+		panic(fmt.Errorf("corrupt tree: could not find %s in parent %s", node.Name, parent.Name))
+	}
+
+	if i == 0 {
+		parent.Children = parent.Children[1:]
+	} else {
+		parent.Children[i-1].Next = node.Next
+		parent.Children = append(parent.Children[:i], parent.Children[i+1:]...)
+	}
+}
+
 func getPrefix(node *Node) string {
 	if node.Parent == nil || (node.Parent != nil && node.Parent.Parent == nil) {
 		return ""
@@ -201,9 +286,10 @@ func showHelp(c *cli.Context) {
 }
 
 var (
-	indent  int
-	input   []string
-	nodeMap map[string]*Node
+	indent      int
+	targetNodes cli.StringSlice
+	input       []string
+	nodeMap     map[string]*Node
 
 	buildTime string
 	goVersion string
@@ -223,6 +309,18 @@ func main() {
 				Value:       2,
 				Usage:       "Requirement's Indent",
 				Destination: &indent,
+			},
+			&cli.StringSliceFlag{
+				Name:        "filter",
+				Aliases:     []string{"f"},
+				Usage:       "Only prints the tree of ancestors and self of the filter",
+				Destination: &targetNodes,
+			},
+			&cli.BoolFlag{
+				Name:        "debug",
+				Aliases:     []string{"d"},
+				Usage:       "Output debug information",
+				Destination: &DEBUG,
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -268,6 +366,14 @@ func main() {
 			nodeMap = make(map[string]*Node)
 
 			tree := parseRequirements(requirements)
+
+			if len(targetNodes.Value()) > 0 {
+				targets := make(map[string]bool)
+				for _, v := range targetNodes.Value() {
+					targets[v] = true
+				}
+				pruneTree(tree, targets)
+			}
 
 			printTree(tree, 0)
 
