@@ -28,11 +28,22 @@ $ go mod graph | gmtree # Indent: 2
 $ go mod graph | gmtree -i n # Indent: n
 ```
 
+Prune treeview to just ancestors and self of specific dependency
+
+```bash
+$ go mod graph | ./gmtree --target-node=github.com/shurcooL/sanitized_anchor_name@v1.0.0
+ github.com/rujax/gmtree
+├── github.com/cpuguy83/go-md2man/v2@v2.0.0-20190314233015-f79a8a8ca69d
+│  └── github.com/shurcooL/sanitized_anchor_name@v1.0.0
+└── github.com/shurcooL/sanitized_anchor_name@v1.0.0
+```
+
 Save treeview to file
 
 ```bash
 $ go mod graph | gmtree > treeview_file_path
 ```
+
 
 ## Example
 
