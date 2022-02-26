@@ -13,6 +13,14 @@ Generate treeview for command "`go mod graph`" .
 $ go get -u https://github.com/rujax/gmtree
 ```
 
+## Docker
+
+```bash
+$ docker build -t rujax/gmtree .
+...
+$ go mod graph | docker run -i rujax/gmtree
+```
+
 ## Argument
 
 | Name | Alias | Type | Default Value |
