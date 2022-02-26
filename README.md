@@ -23,10 +23,11 @@ $ go mod graph | docker run -i rujax/gmtree
 
 ## Argument
 
-| Name | Alias | Type | Default Value |
-| --- | --- | --- | --- |
-| --indent | -i | int | 2 |
- | --filter | -f | string | |
+| Name                | Alias | Type   | Default Value |
+|---------------------|-------|--------|---------------|
+| --indent            | -i    | int    | 2             |
+ | --filter            | -f    | string |               |
+ | --filter-no-version | -n    | string |               |
 
 ## Usage
 
@@ -56,7 +57,17 @@ $ go mod graph | gmtree -i n # Indent: n
 Prune treeview to just ancestors and self of specific dependency
 
 ```bash
-$ go mod graph | ./gmtree --target-node=github.com/shurcooL/sanitized_anchor_name@v1.0.0
+$ go mod graph | ./gmtree -f github.com/shurcooL/sanitized_anchor_name@v1.0.0
+ github.com/rujax/gmtree
+├── github.com/cpuguy83/go-md2man/v2@v2.0.0-20190314233015-f79a8a8ca69d
+│  └── github.com/shurcooL/sanitized_anchor_name@v1.0.0
+└── github.com/shurcooL/sanitized_anchor_name@v1.0.0
+```
+
+Prune treeview to just ancestors and self of unversioned dependency
+
+```bash
+$ go mod graph | ./gmtree -n github.com/shurcooL/sanitized_anchor_name
  github.com/rujax/gmtree
 ├── github.com/cpuguy83/go-md2man/v2@v2.0.0-20190314233015-f79a8a8ca69d
 │  └── github.com/shurcooL/sanitized_anchor_name@v1.0.0

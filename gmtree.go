@@ -33,6 +33,8 @@ type Node struct {
 	Keep     bool
 }
 
+type FilterFunc func(*Node) (keep bool)
+
 func debug(formatString string, args ...interface{}) {
 	if DEBUG {
 		fmt.Printf(formatString+"\n", args...)
@@ -156,8 +158,8 @@ func parseRequirements(requirements []string) *Node {
 	return tree
 }
 
-func pruneTree(root *Node, targets map[string]bool) {
-	keepTraversal(root, targets)
+func pruneTree(root *Node, filerFunc FilterFunc) {
+	keepTraversal(root, filerFunc)
 	if !root.Keep {
 		panic(errors.New("No nodes matched criteria"))
 	}
@@ -165,14 +167,14 @@ func pruneTree(root *Node, targets map[string]bool) {
 	removeNoHitNodes(root)
 }
 
-func keepTraversal(node *Node, targets map[string]bool) {
+func keepTraversal(node *Node, filerFunc FilterFunc) {
 	debug("traversing %s", node.Name)
-	if _, ok := targets[node.Name]; ok {
+	if filerFunc(node) {
 		debug("FOUND %s", node.Name)
 		keepSelfAndAncestors(node)
 	} else {
 		for _, child := range node.Children {
-			keepTraversal(child, targets)
+			keepTraversal(child, filerFunc)
 		}
 	}
 }
@@ -286,10 +288,11 @@ func showHelp(c *cli.Context) {
 }
 
 var (
-	indent      int
-	targetNodes cli.StringSlice
-	input       []string
-	nodeMap     map[string]*Node
+	indent          int
+	filter          cli.StringSlice
+	filterNoVersion cli.StringSlice
+	input           []string
+	nodeMap         map[string]*Node
 
 	buildTime string
 	goVersion string
@@ -314,7 +317,13 @@ func main() {
 				Name:        "filter",
 				Aliases:     []string{"f"},
 				Usage:       "Only prints the tree of ancestors and self of the filter",
-				Destination: &targetNodes,
+				Destination: &filter,
+			},
+			&cli.StringSliceFlag{
+				Name:        "filter-no-version",
+				Aliases:     []string{"n"},
+				Usage:       "Only prints the tree of ancestors and self of the filter, filter has no version, will output any version of the dependency",
+				Destination: &filterNoVersion,
 			},
 			&cli.BoolFlag{
 				Name:        "debug",
@@ -367,12 +376,24 @@ func main() {
 
 			tree := parseRequirements(requirements)
 
-			if len(targetNodes.Value()) > 0 {
+			if len(filter.Value()) > 0 || len(filterNoVersion.Value()) > 0 {
 				targets := make(map[string]bool)
-				for _, v := range targetNodes.Value() {
+				for _, v := range filter.Value() {
 					targets[v] = true
 				}
-				pruneTree(tree, targets)
+				pruneTree(tree, func(node *Node) (keep bool) {
+					if _, ok := targets[node.Name]; ok {
+						return true
+					}
+
+					for _, noVersion := range filterNoVersion.Value() {
+						if noVersion == strings.Split(node.Name, "@")[0] {
+							return true
+						}
+					}
+
+					return false
+				})
 			}
 
 			printTree(tree, 0)
