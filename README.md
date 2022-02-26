@@ -26,6 +26,7 @@ $ go mod graph | docker run -i rujax/gmtree
 | Name | Alias | Type | Default Value |
 | --- | --- | --- | --- |
 | --indent | -i | int | 2 |
+ | --filter | -f | string | |
 
 ## Usage
 
