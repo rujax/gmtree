@@ -23,11 +23,11 @@ $ go mod graph | docker run -i rujax/gmtree
 
 ## Argument
 
-| Name                | Alias | Type   | Default Value |
-|---------------------|-------|--------|---------------|
-| --indent            | -i    | int    | 2             |
- | --filter            | -f    | string |               |
- | --filter-no-version | -n    | string |               |
+| Name                | Alias | Type     | Default Value |
+|---------------------|-------|----------|---------------|
+| --indent            | -i    | int      | 2             |
+ | --filter            | -f    | []string |               |
+ | --filter-no-version | -n    | []string |               |
 
 ## Usage
 
